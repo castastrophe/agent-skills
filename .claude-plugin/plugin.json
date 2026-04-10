@@ -1,0 +1,11 @@
+{
+  "name": "agent-skills",
+  "display_name": "@allons-y/agent-skills",
+  "description": "A collection of skills designed for Claude to streamline processes and reduce token-use",
+  "version": "0.0.0",
+  "components": {
+    "skills": [
+      "skills/gh-notification-summary"
+    ]
+  }
+}

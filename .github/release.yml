@@ -1,0 +1,33 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: "✨ Features"
+      labels:
+        - "type: feature"
+        - "type: enhancement"
+    - title: "🐛 Bug Fixes"
+      labels:
+        - "type: bug"
+        - "type: fix"
+    - title: "⚡ Performance Improvements"
+      labels:
+        - "type: performance"
+    - title: "⏪ Reverts"
+      labels:
+        - "type: revert"
+    - title: "📚 Documentation"
+      labels:
+        - "type: docs"
+        - "type: documentation"
+    - title: "♻️ Refactoring"
+      labels:
+        - "type: refactor"
+    - title: "🔧 Maintenance"
+      labels:
+        - "type: chore"
+        - "type: build"
+        - "type: ci"
+        - "type: dependencies"
+        - "dependencies"

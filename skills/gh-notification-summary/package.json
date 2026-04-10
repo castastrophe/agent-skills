@@ -1,0 +1,16 @@
+{
+  "name": "@allons-y/skill-gh-notification-summary",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Review, summarize, and manage GitHub notifications",
+  "scripts": {
+    "test": "uv run pytest tests",
+    "ci:test": "yarn test --cov-report=xml:../../coverage/coverage-gh-notification-summary.xml",
+    "lint": "uv run ruff check .",
+    "format": "uv run ruff format .",
+    "check": "uv run mypy --config-file pyproject.toml .",
+    "coverage": "yarn test --cov-report=html",
+    "postinstall": "uv sync --frozen && uv pip install -r requirements.txt",
+    "security": "uv run bandit -r scripts/"
+  }
+}

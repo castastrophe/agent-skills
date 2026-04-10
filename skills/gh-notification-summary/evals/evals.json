@@ -1,0 +1,61 @@
+{
+  "skill_name": "gh-notification-summary",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "can you pull up my github notifications? i've been ignoring them for like a week and i'm scared to look",
+      "expected_output": "Runs fetch_notifications.py, opens the dashboard at http://localhost:8000, and asks the user what actions they'd like to take.",
+      "expected_tool_call": "fetch_notifications",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "/unsub 4821",
+      "expected_output": "Runs unsub.py with issue number 4821 and the default repo from GITHUB_REPO, confirms the unsubscribe and mark-done result.",
+      "expected_tool_call": "unsub",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "ok i've looked at everything, just mark them all as done please",
+      "expected_output": "Runs mark_done.py with no arguments to mark all notifications as done, confirms completion.",
+      "expected_tool_call": "mark_done",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "i keep getting pinged on that w3c/csswg-drafts issue 190, can you get me off that thread",
+      "expected_output": "Runs unsub.py 190 w3c/csswg-drafts, confirms the user has been unsubscribed and the notification marked as done.",
+      "expected_tool_call": "unsub",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "what's going on in my repos today? anything i need to look at?",
+      "expected_output": "Runs fetch_notifications.py to open the dashboard and presents the unread notification count and summary to the user.",
+      "expected_tool_call": "fetch_notifications",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "just mark issue 73 on facebook/react as done, i don't need to unsubscribe",
+      "expected_output": "Runs mark_done.py 73 facebook/react (not unsub.py), confirms the notification is marked done without unsubscribing.",
+      "expected_tool_call": "mark_done",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "can you create a new github issue for the bug i just found in my parser?",
+      "expected_output": "Does NOT trigger this skill. This is about creating a new issue, not reviewing existing notifications.",
+      "files": [],
+      "should_trigger": false
+    },
+    {
+      "id": 8,
+      "prompt": "show me all the open pull requests on my team's repo",
+      "expected_output": "Does NOT trigger this skill. This is about listing PRs directly, not reviewing notification inbox items.",
+      "files": [],
+      "should_trigger": false
+    }
+  ]
+}

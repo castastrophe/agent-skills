@@ -1,0 +1,10 @@
+PyGithub
+python-dotenv
+pytest
+pytest-mock
+pytest-cov
+pytest-reportlog
+ruff
+mypy
+bandit
+# types-PyGithub

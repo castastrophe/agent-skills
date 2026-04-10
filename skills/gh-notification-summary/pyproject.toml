@@ -1,0 +1,60 @@
+[project]
+name = "gh-notification-summary"
+version = "0.0.0"
+requires-python = ">=3.13"
+authors = [
+    { name = "Cassondra Roberts", email = "castastrophe@users.noreply.github.com" },
+    { name = "Claude Code", email = "claude@anthropic.com" }
+]
+description = "Review, summarize, and manage GitHub notifications. Use this skill whenever the user mentions GitHub notifications, unread GitHub activity, open issues on their repos, or wants to catch up on project discussions — even if they don't use the word 'notifications'. Also trigger for /unsub <number>, 'mark all done', 'clear my GitHub inbox', or any request to triage, dismiss, or act on GitHub notifications."
+readme = "../../README.md"
+license = "Apache-2.0"
+dependencies = [
+    "jinja2>=3.1.6",
+    "pygithub>=2.9.0",
+    "python-dotenv>=1.2.2",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+addopts = "--cov=scripts --cov-report=xml --cov-report=term-missing"
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["scripts"]
+omit = ["scripts/__init__.py"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.mypy]
+python_version = "3.13"
+mypy_path = "."
+namespace_packages = true
+explicit_package_bases = true
+
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = [
+    "github.*",
+    "dotenv",
+    "jinja2",
+    "jinja2.*",
+]
+ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+    "mypy>=1.20.0",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.15.1",
+    "ruff>=0.15.10",
+]

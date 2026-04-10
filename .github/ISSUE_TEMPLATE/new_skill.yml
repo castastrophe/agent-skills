@@ -1,0 +1,84 @@
+name: New Skill Proposal
+description: Propose a brand-new agent skill for Claude.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea for a new skill? Tell us what problem it solves and what it would let Claude do. You don't need a working implementation to open this — a clear description is enough to start a conversation.
+
+  - type: input
+    id: skill-name
+    attributes:
+      label: Proposed skill name
+      description: Lowercase, hyphenated, matching the directory name convention (e.g. `gh-notification-summary`).
+      placeholder: "linear-issue-triage"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow or pain point this skill would address. Focus on the user experience, not the implementation.
+      placeholder: "I spend 15 minutes every morning triaging Linear issues assigned to my team. Claude should be able to do this for me."
+    validations:
+      required: true
+
+  - type: textarea
+    id: capabilities
+    attributes:
+      label: What should Claude be able to do with this skill?
+      description: List the specific actions or outputs the skill should enable.
+      placeholder: |
+        - Fetch all unassigned issues in a Linear team
+        - Summarize each issue in one sentence
+        - Suggest a priority level based on labels and description
+        - Assign issues on request
+    validations:
+      required: true
+
+  - type: textarea
+    id: triggers
+    attributes:
+      label: What prompts or phrases should trigger this skill?
+      description: These will inform the `description` field in `SKILL.md`.
+      placeholder: |
+        - "triage my Linear inbox"
+        - "what's unassigned on the team board?"
+        - "/linear triage"
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation notes (optional)
+      description: APIs, libraries, authentication approach, or prior art you have in mind. Leave blank if you're not sure.
+      placeholder: "Could use the Linear GraphQL API with a personal API key stored in LINEAR_API_KEY."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to implement this skill and open a PR.
+
+  - type: checkboxes
+    id: sponsor
+    attributes:
+      label: Sponsorship
+      options:
+        - label: I'm willing to fund the development of this skill through a sponsorship and would like the repository owner to reach
+
+  - type: textarea
+    id: contact-details
+    if: ${{ inputs.sponsor }}
+    attributes:
+      label: Contact details
+      description: Please provide your contact details so that the repository owner can reach out to you to discuss the details of the sponsorship.
+      placeholder: "Email address, LinkedIn profile, etc."
+    validations:
+      required: false
