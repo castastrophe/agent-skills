@@ -1,0 +1,63 @@
+name: Enhancement Request
+description: Suggest an improvement to an existing skill or the project tooling.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to request a new capability, behavior change, or quality-of-life improvement for something that already exists in the project.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: What would you like to improve?
+      options:
+        - "Skill: gh-notification-summary"
+        - "Tooling / scripts"
+        - "CI / GitHub Actions"
+        - "npm package / install"
+        - "Documentation"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behavior
+      description: What does it do today?
+      placeholder: "The dashboard only shows the 20 most recent notifications."
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired behavior
+      description: What should it do instead? Be specific about the outcome, not just the implementation.
+      placeholder: "The dashboard should show all unread notifications, paginating if there are more than 50."
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why would this be valuable?
+      description: Help us understand the use case and how many people it might affect.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+      description: Any workarounds you've tried, or other approaches we should consider.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to implement this and open a PR.

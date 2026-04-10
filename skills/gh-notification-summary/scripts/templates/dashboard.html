@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Notifications</title>
+<style>
+    :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --text-muted: #8b949e;
+        --accent: #58a6ff;
+        --accent-hover: #79c0ff;
+        --green: #3fb950;
+        --orange: #d29922;
+        --red: #f85149;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        padding: 2rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    header h1 a { color: var(--accent); text-decoration: none; }
+    header h1 a:hover { text-decoration: underline; }
+    .meta-row {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: border-color 0.15s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card-header {
+        padding: 1rem 1.25rem 0.75rem;
+    }
+    .card-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    .issue-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.05rem;
+        flex: 1;
+    }
+    .issue-link:hover { color: var(--accent-hover); text-decoration: underline; }
+    .issue-number { color: var(--text-muted); font-weight: 400; margin-right: 0.25rem; }
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        text-transform: uppercase;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .reason-subscribed { background: #1f3a5f; color: #58a6ff; }
+    .reason-mention { background: #3b2e00; color: #d29922; }
+    .reason-review-requested { background: #2a1a00; color: #d29922; }
+    .reason-author { background: #1a3a1a; color: #3fb950; }
+    .reason-comment { background: #1f3a5f; color: #58a6ff; }
+    .reason-assign { background: #3b1a3b; color: #bc8cff; }
+    .card-meta {
+        margin-top: 0.4rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+    }
+    .updated { color: var(--text-muted); font-size: 0.8rem; margin-right: 0.5rem; }
+    .label {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.45rem;
+        border-radius: 999px;
+        font-weight: 500;
+    }
+    .card-body {
+        padding: 0 1.25rem 0.75rem;
+    }
+    .card-body h4 {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .comment {
+        padding: 0.5rem 0;
+        border-top: 1px solid var(--border);
+    }
+    .comment:first-child { border-top: none; }
+    .comment-author { color: var(--accent); font-weight: 600; font-size: 0.85rem; }
+    .comment-time { color: var(--text-muted); font-size: 0.75rem; margin-left: 0.5rem; }
+    .comment-body { color: var(--text); font-size: 0.88rem; margin-top: 0.25rem; }
+    .no-comments { color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
+    .card-actions {
+        padding: 0.5rem 1.25rem;
+        background: rgba(0,0,0,0.15);
+        border-top: 1px solid var(--border);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .card-actions code {
+        background: var(--bg);
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        color: var(--text);
+    }
+    .empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+    .empty h2 { margin-bottom: 0.5rem; color: var(--green); }
+    .mark-done-row {
+        margin-bottom: 1.5rem;
+        padding: 0.75rem 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    .mark-done-row code {
+        background: var(--bg);
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        color: var(--text);
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1><a href="https://github.com/{{ repo_name }}">{{ repo_name }}</a> Notifications</h1>
+    <div class="meta-row">
+        <span>{{ cards | length }} unread notification{{ "" if cards | length == 1 else "s" }}</span>
+        <span>Generated {{ now | relative_time }}</span>
+    </div>
+</header>
+{% if cards %}
+<div class="mark-done-row">
+    <span>Quick actions: <code>/unsub &lt;number&gt;</code> to unsubscribe from an issue, or ask to <strong>mark all done</strong></span>
+</div>
+{% for card in cards %}
+        <div class="card" data-issue="{{ card.issue_number }}" data-notif-id="{{ card.notif_id }}">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <a href="{{ card.issue_url }}" target="_blank" class="issue-link">
+                        <span class="issue-number">#{{ card.issue_number }}</span>
+                        {{ card.title }}
+                    </a>
+                    <span class="badge reason-{{ card.reason_class }}">{{ card.reason }}</span>
+                </div>
+                <div class="card-meta">
+                    <span class="updated">{{ card.updated }}</span>
+                    {% for label in card.labels %}
+                    <span class="label" style="background:#{{ label.color }};color:{{ label.color | label_text_color }}">{{ label.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-body">
+                <h4>Latest activity</h4>
+                {% if card.comments %}
+                {% for comment in card.comments %}
+                <div class="comment">
+                    <span class="comment-author">@{{ comment.author }}</span>
+                    <span class="comment-time">{{ comment.when }}</span>
+                    <p class="comment-body">{{ comment.body | summarize }}</p>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="no-comments">No recent comments</p>
+                {% endif %}
+            </div>
+            <div class="card-actions">
+                <code>/unsub {{ card.issue_number }}</code>
+            </div>
+        </div>
+{% endfor %}
+{% else %}
+<div class="empty">
+    <h2>All clear!</h2>
+    <p>No unread notifications for {{ repo_name }}.</p>
+</div>
+{% endif %}
+</body>
+</html>

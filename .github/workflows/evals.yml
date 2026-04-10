@@ -1,0 +1,130 @@
+name: Skills evaluation
+
+on:
+  # Run when a PR is approved — blocks merge if evals fail.
+  # Register "Evals Complete" as a required status check in branch protection.
+  pull_request_review:
+    types: [submitted]
+
+  # Also runnable manually, e.g. before a release.
+  workflow_dispatch:
+    inputs:
+      skill:
+        description: "Skill name to evaluate (leave blank for all skills)"
+        required: false
+        default: ""
+      model:
+        description: "Anthropic model override (leave blank for default)"
+        required: false
+        default: ""
+
+jobs:
+  # Detect which skills have relevant changes so we only run evals for those.
+  changes:
+    name: Detect changed skills
+    runs-on: ubuntu-latest
+    # For PR reviews: only proceed when the review is an approval.
+    # For manual runs: always proceed.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.review.state == 'approved'
+    outputs:
+      skills: ${{ steps.detect.outputs.skills }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history needed so git diff can compare against the base branch.
+          fetch-depth: 0
+
+      - name: Detect changed skills
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.skill }}" ]; then
+            # Manual run targeting a single skill.
+            echo 'skills=["${{ inputs.skill }}"]' >> "$GITHUB_OUTPUT"
+
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual run with no skill specified — evaluate all skills.
+            SKILLS=$(ls -d skills/*/ 2>/dev/null | cut -d/ -f2 | jq -R . | jq -sc .)
+            echo "skills=$SKILLS" >> "$GITHUB_OUTPUT"
+
+          else
+            # PR review — only skills with changes to evals/, scripts/, or SKILL.md.
+            BASE="${{ github.event.pull_request.base.ref }}"
+            SKILLS=$(
+              git diff --name-only "origin/${BASE}...HEAD" \
+                | grep -E '^skills/[^/]+/(evals/|scripts/|SKILL\.md)' \
+                | cut -d/ -f2 \
+                | sort -u \
+                | jq -R . | jq -sc .
+            )
+            echo "skills=$SKILLS" >> "$GITHUB_OUTPUT"
+          fi
+
+  evals:
+    name: Evaluate skill (${{ matrix.skill }})
+    needs: [changes]
+    # Skip entirely when no skills changed — evals-complete handles the no-op case.
+    if: needs.changes.outputs.skills != '[]' && needs.changes.outputs.skills != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        skill: ${{ fromJSON(needs.changes.outputs.skills) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use Node LTS version
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run evals for ${{ matrix.skill }}
+        run: yarn evals ${{ matrix.skill }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: ${{ inputs.model }}
+
+  # Stable job name for branch protection required status checks.
+  # Always runs so GitHub never sees the check as "missing" when no skills changed.
+  evals-complete:
+    name: Evaluation results
+    runs-on: ubuntu-latest
+    needs: [changes, evals]
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.evals.result }}" = "failure" ]; then
+            echo "One or more eval suites failed."
+            exit 1
+          fi
+
+          SKILLS="${{ needs.changes.outputs.skills }}"
+          if [ "$SKILLS" = "[]" ] || [ -z "$SKILLS" ]; then
+            echo "No skills changed — evals skipped."
+          else
+            echo "All evals passed."
+          fi

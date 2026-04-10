@@ -1,0 +1,106 @@
+{
+  "name": "@allons-y/agent-skills",
+  "version": "0.0.0",
+  "description": "A collection of skills designed for Claude to streamline processes and reduce token-use",
+  "license": "Apache-2.0",
+  "author": "Cassondra Roberts <castastrophe@users.noreply.github.com> (https://allons-y.llc)",
+  "homepage": "https://github.com/castastrophe/agent-skills#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/castastrophe/agent-skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/castastrophe/agent-skills/issues"
+  },
+  "type": "module",
+  "workspaces": [
+    "skills/*"
+  ],
+  "main": "index.js",
+  "bin": "bin/install.js",
+  "files": [
+    ".claude-plugin/",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "agent.yaml",
+    "marketplace.json",
+    "bin/",
+    "index.js",
+    "skills/",
+    "AGENTS.md"
+  ],
+  "scripts": {
+    "coverage": "node scripts/run-tests.js --coverage-only",
+    "postinstall": "husky && envoy || true",
+    "prepack": "pinst --disable",
+    "postpack": "pinst --enable",
+    "generate-agent-yaml": "node scripts/generate-agent-yaml.js",
+    "generate-plugin-manifest": "node scripts/generate-plugin-manifest.js",
+    "prepublishOnly": "yarn bundle && yarn generate-agent-yaml && yarn generate-plugin-manifest",
+    "release": "semantic-release",
+    "evals": "node scripts/run-evals.js",
+    "test": "node scripts/run-tests.js",
+    "ci:test": "yarn workspaces foreach -A run ci:test",
+    "lint": "yarn workspaces foreach -A run lint",
+    "format": "yarn workspaces foreach -A run format",
+    "check": "yarn workspaces foreach -A run check",
+    "security": "yarn workspaces foreach -A run security",
+    "bundle": "node scripts/bundle-skills.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.17"
+  },
+  "devDependencies": {
+    "@allons-y/envoy": "^1.0.0",
+    "@anthropic-ai/sdk": "^0.86.1",
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@semantic-release/changelog": "^6.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.0",
+    "@semantic-release/github": "^12.0.0",
+    "@semantic-release/npm": "^13.0.0",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "colors": "^1.4.0",
+    "eslint": "^10.1.0",
+    "execa": "^9.6.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.3",
+    "listr2": "^10.2.1",
+    "pinst": "^3.0.0",
+    "prettier": "^3.8.1",
+    "prettier-package-json": "^2.8.0",
+    "python-shell": "^5.0.0",
+    "semantic-release": "^25.0.0",
+    "text-table": "^0.2.0",
+    "yargs": "^18.0.0"
+  },
+  "keywords": [
+    "agent-skills",
+    "claude-code",
+    "claude",
+    "anthropic",
+    "ai",
+    "agents",
+    "automation"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/castastrophe"
+    },
+    {
+      "type": "buy-me-a-coffee",
+      "url": "https://www.buymeacoffee.com/castastrophe"
+    }
+  ],
+  "packageManager": "yarn@4.13.0"
+}
