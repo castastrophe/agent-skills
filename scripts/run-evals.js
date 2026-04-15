@@ -10,20 +10,55 @@ const root = process.cwd();
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
 
 /**
- * Build a minimal tool definition for each Python script in the skill's
- * scripts/ directory. We don't need rich schemas — the SKILL.md system prompt
- * provides enough context for Claude to choose the right tool.
+ * Build a minimal tool definition for runnable entrypoints in the skill's
+ * `scripts/` directory. Python skills get one tool per `.py` file. Node skills
+ * that ship `gh-notifications.js` / `gh-notifications.js` get tools named
+ * `fetch`, `done`, and `unsub` (yargs subcommands). Schemas stay empty —
+ * SKILL.md carries the behavioral detail.
  */
 function buildTools(scriptsPath) {
 	if (!fs.existsSync(scriptsPath)) return [];
-	return fs
-		.readdirSync(scriptsPath)
-		.filter((f) => f.endsWith(".py") && f !== "__init__.py")
-		.map((f) => ({
-			name: f.replace(".py", ""),
-			description: `Run the ${f} script`,
-			input_schema: { type: "object", properties: {} },
-		}));
+
+	const files = fs.readdirSync(scriptsPath);
+	const tools = [];
+
+	for (const f of files) {
+		if (f.endsWith(".py") && f !== "__init__.py") {
+			tools.push({
+				name: f.replace(".py", ""),
+				description: `Run the ${f} script`,
+				input_schema: { type: "object", properties: {} },
+			});
+		}
+	}
+
+	const hasGhNotificationsCli = files.some((f) =>
+		/^gh-notifications\.(mjs|js)$/.test(f)
+	);
+	if (hasGhNotificationsCli) {
+		tools.push(
+			{
+				name: "fetch",
+				description:
+					"Run gh-notifications fetch — open the local notification dashboard (http://localhost:8000)",
+				input_schema: { type: "object", properties: {} },
+			},
+			{
+				name: "done",
+				description:
+					"Run gh-notifications done — mark one or all GitHub notifications as read/done",
+				input_schema: { type: "object", properties: {} },
+			},
+			{
+				name: "unsub",
+				description:
+					"Run gh-notifications unsub — unsubscribe from an issue thread and mark the notification done",
+				input_schema: { type: "object", properties: {} },
+			}
+		);
+	}
+
+	return tools;
 }
 
 async function runEvalItem(item, tools, skillMd, client) {
@@ -69,23 +104,22 @@ async function runSkillEvals(skillName, client) {
 	if (!fs.existsSync(evalsPath)) return null;
 
 	const { evals } = JSON.parse(fs.readFileSync(evalsPath, "utf8"));
-	const skillMd = fs.readFileSync(
-		path.join(skillPath, "SKILL.md"),
-		"utf8",
-	);
+	const skillMd = fs.readFileSync(path.join(skillPath, "SKILL.md"), "utf8");
 	const tools = buildTools(path.join(skillPath, "scripts"));
 
 	console.log(`\nRunning evals for ${skillName} (${evals.length} cases)...`);
 
 	// Run all evals for this skill in parallel.
 	const results = await Promise.allSettled(
-		evals.map((item) => runEvalItem(item, tools, skillMd, client)),
+		evals.map((item) => runEvalItem(item, tools, skillMd, client))
 	);
 
 	let failures = 0;
 	for (const result of results) {
 		if (result.status === "rejected") {
-			console.error(`  [ERROR] ${result.reason?.message ?? result.reason}`);
+			console.error(
+				`  [ERROR] ${result.reason?.message ?? result.reason}`
+			);
 			failures++;
 		} else {
 			const { id, passed, reason, prompt } = result.value;
@@ -105,7 +139,7 @@ async function runSkillEvals(skillName, client) {
 async function main() {
 	if (!process.env.ANTHROPIC_API_KEY) {
 		console.error(
-			"Error: ANTHROPIC_API_KEY is not set. Export it before running evals.",
+			"Error: ANTHROPIC_API_KEY is not set. Export it before running evals."
 		);
 		process.exit(1);
 	}
@@ -134,7 +168,7 @@ async function main() {
 
 	// Run all skills in parallel.
 	const summaries = await Promise.allSettled(
-		skillDirs.map((name) => runSkillEvals(name, client)),
+		skillDirs.map((name) => runSkillEvals(name, client))
 	);
 
 	console.log("\n--- Eval Summary ---");
@@ -148,7 +182,7 @@ async function main() {
 			const { skillName, total, failures } = s.value;
 			const passed = total - failures;
 			console.log(
-				`${failures === 0 ? "✓" : "✗"} ${skillName}: ${passed}/${total} passed`,
+				`${failures === 0 ? "✓" : "✗"} ${skillName}: ${passed}/${total} passed`
 			);
 			totalFailures += failures;
 		}

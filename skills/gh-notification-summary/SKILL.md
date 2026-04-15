@@ -13,19 +13,33 @@ Fetch unread GitHub notifications, present them in an interactive local dashboar
 ## Environment requirements
 
 - `GITHUB_TOKEN` set in the environment or a `.env` file at `<skill-path>`
-- `GITHUB_REPO` (optional) — used as the default repository when the user omits one
+- `GITHUB_REPO` (optional) — when set, `fetch` shows only notifications for this repository (`owner/repo`); also used as the default `--repo` for `done` / `unsub` when omitted. If unset, `fetch` lists all unread notifications across your account.
+
+## Local preview
+
+To run the dashboard against your own GitHub account:
+
+```bash
+# 1. Copy the example env file and fill in your token
+cp <skill-path>/.env.example <skill-path>/.env
+
+# 2. Launch the dashboard
+yarn workspace @allons-y/skill-gh-notification-summary preview
+```
+
+Your browser will open automatically at `http://localhost:8000`. The command keeps running until you stop it with **Ctrl+C** (that shuts down the server and frees the port).
 
 ## CLI
 
 All actions go through a single script with subcommands:
 
 ```bash
-python <skill-path>/scripts/gh_notifications.py <command> [options]
+node <skill-path>/scripts/gh-notifications.js <command> [options]
 ```
 
 ## Workflow
 
-1. Run `gh_notifications.py fetch` to open the dashboard in the user's browser.
+1. Run `gh-notifications.js fetch` to open the dashboard in the user's browser (the process blocks until **Ctrl+C**).
 2. The user reviews their notifications at `http://localhost:8000`.
 3. Ask whether they want to take any actions — unsubscribe from issues or mark notifications as done.
 4. Execute the appropriate subcommand (see Quick Actions below) and confirm the result.
@@ -33,10 +47,16 @@ python <skill-path>/scripts/gh_notifications.py <command> [options]
 ## Launching the dashboard
 
 ```bash
-python <skill-path>/scripts/gh_notifications.py fetch
+node <skill-path>/scripts/gh-notifications.js fetch
 ```
 
-This fetches all unread notifications via the GitHub API, starts a local HTTP server on port 8000, and opens the dashboard automatically. The dashboard shows each notification as a card with labels, latest comments, and copy-paste quick-action commands.
+Optional: limit to one repository (CLI overrides `GITHUB_REPO` when both are set):
+
+```bash
+node <skill-path>/scripts/gh-notifications.js fetch --repo owner/repo
+```
+
+This fetches unread notifications from the GitHub API. With no `GITHUB_REPO` and no `--repo`, every unread notification is shown. With `GITHUB_REPO` or `--repo`, only notifications for that repository are shown. A local HTTP server listens on port 8000 and the dashboard opens in the browser; **press Ctrl+C** to stop the server and release the port. Each notification is a card with copy-paste quick-action commands.
 
 ## Quick Actions
 
@@ -45,7 +65,7 @@ This fetches all unread notifications via the GitHub API, starts a local HTTP se
 When the user says `/unsub <number>` or asks to unsubscribe from an issue:
 
 ```bash
-python <skill-path>/scripts/gh_notifications.py unsub <number> --repo <owner/repo>
+node <skill-path>/scripts/gh-notifications.js unsub <number> --repo <owner/repo>
 ```
 
 Unsubscribes from the thread and marks the notification as done. If `--repo` is omitted, `GITHUB_REPO` is used as the default.
@@ -55,24 +75,18 @@ Unsubscribes from the thread and marks the notification as done. If `--repo` is 
 To mark **all** notifications as done:
 
 ```bash
-python <skill-path>/scripts/gh_notifications.py done
+node <skill-path>/scripts/gh-notifications.js done
 ```
 
 To mark a **specific** issue as done:
 
 ```bash
-python <skill-path>/scripts/gh_notifications.py done <number> --repo <owner/repo>
+node <skill-path>/scripts/gh-notifications.js done <number> --repo <owner/repo>
 ```
 
 ## Dashboard template
 
-The HTML dashboard is rendered from a Jinja2 template at `<skill-path>/scripts/templates/dashboard.html`. To customize the dashboard appearance, edit that template directly. The template receives:
-
-- `repo_name` — the repository name string
-- `now` — the current UTC datetime
-- `cards` — a list of notification dicts, each with `title`, `reason`, `issue_number`, `issue_url`, `labels`, `comments`, etc.
-
-Custom Jinja2 filters available in the template: `relative_time`, `summarize`, `label_text_color`.
+The HTML dashboard is rendered from a Nunjucks template at `<skill-path>/scripts/templates/dashboard.html`. To customize the dashboard appearance, edit that template directly. The template receives the parsed notification object.
 
 ## Scheduled use
 

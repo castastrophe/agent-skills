@@ -1,0 +1,189 @@
+{
+	"$schema": "Local fixtures mirroring @octokit/rest responses used by scripts/github.js (Notifications + NotificationItem).",
+	"usersGetAuthenticated": {
+		"status": 200,
+		"headers": {},
+		"url": "https://api.github.com/user",
+		"data": {
+			"login": "fixture-user",
+			"id": 900001,
+			"node_id": "U_kgDOABC",
+			"avatar_url": "https://avatars.githubusercontent.com/u/900001?v=4",
+			"type": "User",
+			"name": "Fixture User",
+			"email": null
+		}
+	},
+	"listNotificationsForAuthenticatedUser": [
+		{
+			"id": "11110000",
+			"repository": {
+				"id": 420001,
+				"node_id": "R_kgDOAAA",
+				"name": "sample-app",
+				"full_name": "acme-corp/sample-app",
+				"private": false,
+				"owner": {
+					"login": "acme-corp",
+					"id": 1,
+					"type": "Organization"
+				},
+				"html_url": "https://github.com/acme-corp/sample-app",
+				"description": "Sample application",
+				"fork": false
+			},
+			"subject": {
+				"title": "Investigate flaky cache invalidation",
+				"url": "https://api.github.com/repos/acme-corp/sample-app/issues/42",
+				"latest_comment_url": "https://api.github.com/repos/acme-corp/sample-app/issues/comments/90001",
+				"type": "Issue"
+			},
+			"reason": "mention",
+			"unread": true,
+			"updated_at": "2026-04-10T14:22:00Z",
+			"last_read_at": null,
+			"url": "https://api.github.com/notifications/threads/11110000",
+			"subscription_url": "https://api.github.com/notifications/threads/11110000/subscription"
+		},
+		{
+			"id": "11110001",
+			"repository": {
+				"id": 420002,
+				"name": "infra",
+				"full_name": "acme-corp/infra",
+				"private": true,
+				"owner": {
+					"login": "acme-corp",
+					"id": 1,
+					"type": "Organization"
+				},
+				"html_url": "https://github.com/acme-corp/infra"
+			},
+			"subject": {
+				"title": "Deploy pipeline failing on main",
+				"url": "https://api.github.com/repos/acme-corp/infra/pulls/7",
+				"latest_comment_url": null,
+				"type": "PullRequest"
+			},
+			"reason": "team_mention",
+			"unread": true,
+			"updated_at": "2026-04-11T09:05:00Z",
+			"last_read_at": "2026-04-11T08:00:00Z",
+			"url": "https://api.github.com/notifications/threads/11110001"
+		}
+	],
+	"issuesGet": {
+		"acme-corp/sample-app#42": {
+			"status": 200,
+			"url": "https://api.github.com/repos/acme-corp/sample-app/issues/42",
+			"data": {
+				"id": 500042,
+				"node_id": "I_kwDOBBB",
+				"number": 42,
+				"state": "open",
+				"locked": false,
+				"title": "Investigate flaky cache invalidation",
+				"body": "Cache sometimes misses after deploy.",
+				"user": {
+					"login": "alice",
+					"id": 10,
+					"type": "User"
+				},
+				"labels": [
+					{
+						"id": 1,
+						"name": "bug",
+						"color": "d73a4a",
+						"description": "Something is not working"
+					},
+					{
+						"id": 2,
+						"name": "priority-high",
+						"color": "b60205",
+						"default": false
+					}
+				],
+				"comments": 3,
+				"created_at": "2026-04-01T10:00:00Z",
+				"updated_at": "2026-04-10T14:00:00Z",
+				"html_url": "https://github.com/acme-corp/sample-app/issues/42"
+			}
+		},
+		"acme-corp/infra#7": {
+			"status": 200,
+			"url": "https://api.github.com/repos/acme-corp/infra/issues/7",
+			"data": {
+				"id": 500007,
+				"number": 7,
+				"state": "open",
+				"title": "Deploy pipeline failing on main",
+				"body": "See CI logs.",
+				"user": { "login": "bob", "id": 11, "type": "User" },
+				"labels": [{ "id": 3, "name": "ci", "color": "1d76db" }],
+				"pull_request": {
+					"url": "https://api.github.com/repos/acme-corp/infra/pulls/7",
+					"html_url": "https://github.com/acme-corp/infra/pull/7"
+				},
+				"created_at": "2026-04-09T12:00:00Z",
+				"updated_at": "2026-04-11T09:00:00Z",
+				"html_url": "https://github.com/acme-corp/infra/pull/7"
+			}
+		}
+	},
+	"issueListComments": {
+		"acme-corp/sample-app#42": [
+			{
+				"id": 90000,
+				"node_id": "IC_kwDOCCC",
+				"html_url": "https://github.com/acme-corp/sample-app/issues/42#issuecomment-90000",
+				"body": "I can reproduce after clearing the CDN edge cache.",
+				"user": {
+					"login": "alice",
+					"id": 10,
+					"type": "User",
+					"avatar_url": "https://avatars.githubusercontent.com/u/10?v=4",
+					"html_url": "https://github.com/alice"
+				},
+				"created_at": "2026-04-10T12:00:00Z",
+				"updated_at": "2026-04-10T12:00:00Z",
+				"reactions": {
+					"total_count": 1,
+					"+1": 1,
+					"-1": 0,
+					"laugh": 0,
+					"hooray": 0,
+					"confused": 0,
+					"heart": 0,
+					"rocket": 0,
+					"eyes": 0
+				}
+			},
+			{
+				"id": 90001,
+				"html_url": "https://github.com/acme-corp/sample-app/issues/42#issuecomment-90001",
+				"body": "Patch in #43 should fix the TTL mismatch.",
+				"user": {
+					"login": "carol",
+					"id": 12,
+					"type": "User",
+					"avatar_url": "https://avatars.githubusercontent.com/u/12?v=4",
+					"html_url": "https://github.com/carol"
+				},
+				"created_at": "2026-04-10T14:22:00Z",
+				"updated_at": "2026-04-10T14:22:00Z",
+				"reactions": { "total_count": 0, "+1": 0, "-1": 0, "laugh": 0, "hooray": 0, "confused": 0, "heart": 0, "rocket": 0, "eyes": 0 }
+			}
+		],
+		"acme-corp/infra#7": []
+	},
+	"markNotificationsAsRead": {
+		"status": 205,
+		"headers": {},
+		"url": "https://api.github.com/notifications",
+		"data": {}
+	},
+	"getAISummaryByIssue": {
+		"acme-corp/sample-app#42": "Alice reproduced the CDN edge case; Carol points to TTL mismatch fixed in PR #43. Follow up: verify deploy after merge.",
+		"acme-corp/infra#7": "No new comments since last read; check CI logs on main."
+	}
+}

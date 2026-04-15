@@ -36,11 +36,22 @@ function parseSkillMeta(skillName) {
 		match[1].split("\n").flatMap((line) => {
 			const [key, ...rest] = line.split(":");
 			if (!key || !rest.length) return [];
-			return [[key.trim(), rest.join(":").trim().replace(/^["']|["']$/g, "")]];
-		}),
+			return [
+				[
+					key.trim(),
+					rest
+						.join(":")
+						.trim()
+						.replace(/^["']|["']$/g, ""),
+				],
+			];
+		})
 	);
 
-	return { name: meta.name || skillName, description: meta.description || "" };
+	return {
+		name: meta.name || skillName,
+		description: meta.description || "",
+	};
 }
 
 /**
@@ -48,7 +59,10 @@ function parseSkillMeta(skillName) {
  */
 function listSkills() {
 	if (!fs.existsSync(skillsDir)) {
-		console.log("✗".red + "  No skills directory found. The package may not have been published yet.");
+		console.log(
+			"✗".red +
+				"  No skills directory found. The package may not have been published yet."
+		);
 		process.exit(1);
 	}
 
@@ -62,7 +76,7 @@ function listSkills() {
 		return;
 	}
 
-	console.log(`\n${'Available skills'.bold} (${skills.length} total)\n`);
+	console.log(`\n${"Available skills".bold} (${skills.length} total)\n`);
 	for (const skill of skills) {
 		console.log(`  ${skill.name.cyan}`);
 		if (skill.description) {
@@ -84,8 +98,12 @@ function listSkills() {
 		console.log();
 	}
 
-	console.log(`${'Install a skill:'.dim}  npx @allons-y/agent-skills <skill-name>`);
-	console.log(`${'Install all:'.dim}      npx @allons-y/agent-skills --all\n`);
+	console.log(
+		`${"Install a skill:".dim}  npx @allons-y/agent-skills <skill-name>`
+	);
+	console.log(
+		`${"Install all:".dim}      npx @allons-y/agent-skills --all\n`
+	);
 }
 
 /**
@@ -99,10 +117,16 @@ function installSkill(skillName, installDir) {
 		// Fall back to directory copy if zip isn't present (dev/local usage)
 		const srcPath = path.join(skillsDir, skillName);
 		if (!fs.existsSync(srcPath)) {
-			console.log("✗".red + `  Skill "${skillName}" not found. Run without arguments to list available skills.`);
+			console.log(
+				"✗".red +
+					`  Skill "${skillName}" not found. Run without arguments to list available skills.`
+			);
 			process.exit(1);
 		}
-		console.log("!".yellow + `  No zip found for "${skillName}" — copying source directory instead.`);
+		console.log(
+			"!".yellow +
+				`  No zip found for "${skillName}" — copying source directory instead.`
+		);
 		copyDir(srcPath, destPath);
 	} else {
 		fs.mkdirSync(destPath, { recursive: true });
@@ -153,15 +177,21 @@ function main() {
 			.filter((e) => e.isDirectory())
 			.map((e) => e.name);
 
-		console.log(`\nInstalling ${skills.length} skill(s) to ${installDir.dim}\n`);
+		console.log(
+			`\nInstalling ${skills.length} skill(s) to ${installDir.dim}\n`
+		);
 		for (const skill of skills) {
 			installSkill(skill, installDir);
 		}
-		console.log(`\n${'Done!'.green.bold} Restart Claude to activate the skills.\n`);
+		console.log(
+			`\n${"Done!".green.bold} Restart Claude to activate the skills.\n`
+		);
 	} else {
 		console.log();
 		installSkill(skillArg, installDir);
-		console.log(`\n${'Done!'.green.bold} Restart Claude to activate the skill.\n`);
+		console.log(
+			`\n${"Done!".green.bold} Restart Claude to activate the skill.\n`
+		);
 	}
 }
 
