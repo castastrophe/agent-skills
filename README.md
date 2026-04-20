@@ -40,7 +40,7 @@ Install everything:
 
 No clone or install required:
 
-```bash
+```sh
 # List available skills
 npx @allons-y/agent-skills
 
@@ -62,8 +62,8 @@ Download the `.zip` from the [npm package](https://www.npmjs.com/package/@allons
 
 ## Available Skills
 
-| Skill | Description | Trigger |
-|-------|-------------|---------|
+| Skill                                                                | Description                                                                           | Trigger                                                             |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | [`gh-notification-summary`](skills/gh-notification-summary/SKILL.md) | Review, summarize, and manage GitHub notifications via an interactive local dashboard | "check my GitHub notifications", `/unsub <number>`, "mark all done" |
 
 ---
@@ -73,7 +73,7 @@ Download the `.zip` from the [npm package](https://www.npmjs.com/package/@allons
 The package exposes a `getSkills()` helper for tool builders who want to list or load skills dynamically:
 
 ```js
-import { getSkills } from '@allons-y/agent-skills';
+import { getSkills } from "@allons-y/agent-skills";
 
 const skills = getSkills();
 // [
@@ -99,7 +99,7 @@ const skills = getSkills();
 
 ### Installation
 
-```bash
+```sh
 yarn install
 ```
 
@@ -107,14 +107,14 @@ yarn install
 
 This is a Yarn workspaces monorepo — each skill under `skills/` is its own workspace. Target a specific skill with `yarn workspace`:
 
-```bash
+```sh
 yarn workspace @allons-y/skill-gh-notification-summary test
 yarn workspace @allons-y/skill-gh-notification-summary lint
 ```
 
 Or run across all skills at once:
 
-```bash
+```sh
 yarn workspaces foreach -A run test
 ```
 
@@ -124,7 +124,7 @@ For full setup instructions — including Python virtual environments, running t
 
 ## Project Structure
 
-```
+```sh
 agent-skills/                         # Root workspace (publishes to npm)
 ├── package.json                      # workspaces: ["skills/*"]
 ├── index.js                          # Exports getSkills()
@@ -155,29 +155,34 @@ agent-skills/                         # Root workspace (publishes to npm)
 <summary><b>What's inside a skill .zip file?</b></summary>
 
 The `.zip` contains the full skill directory: `SKILL.md`, all scripts, and the `requirements.txt`. It is structured so that unzipping it directly into `~/.claude/skills/<skill-name>/` gives you a ready-to-use skill with no further setup.
+
 </details>
 
 <details>
 <summary><b>How do I install a skill for use with Claude?</b></summary>
 
 **Via Claude Code (easiest):**
-```
+
+```sh
 /plugin marketplace add castastrophe/agent-skills
 /plugin install gh-notification-summary@agent-skills
 ```
 
 **Via npx:**
-```bash
+
+```sh
 npx @allons-y/agent-skills gh-notification-summary
 ```
 
 **Manually:** unzip into `~/.claude/skills/gh-notification-summary/`. Claude detects `SKILL.md` automatically on next launch.
+
 </details>
 
 <details>
 <summary><b>How do I add a new skill or run tests?</b></summary>
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide: environment setup, running tests, linting, evals format, and PR checklist.
+
 </details>
 
 ---
@@ -187,6 +192,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide: environment setup, ru
 Contributions are welcome — new skills, improvements to existing ones, bug fixes, and documentation. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 **Ideas for new skills:**
+
 - GitHub PR review summarizer
 - Linear / Jira issue triage
 - Slack digest summarizer

@@ -1,0 +1,247 @@
+:root {
+	--bg: light-dark(#ffffff, #0d1117);
+	--surface: light-dark(#f6f8fa, #161b22);
+	--border: light-dark(#d0d7de, #30363d);
+	--text: light-dark(#1f2328, #e6edf3);
+	--text-muted: light-dark(#656d76, #8b949e);
+	--accent: light-dark(#0969da, #58a6ff);
+	--accent-hover: light-dark(#0550ae, #79c0ff);
+	--green: light-dark(#1a7f37, #3fb950);
+	--red: light-dark(#cf222e, #f85149);
+	--overlay: light-dark(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.15));
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+body {
+	color-scheme: light dark;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+		sans-serif;
+	background: var(--bg);
+	color: var(--text);
+	line-height: 1.4;
+	padding: 2rem;
+	max-inline-size: 900px;
+	margin: 0 auto;
+}
+
+[hidden] {
+	display: none !important;
+}
+
+button {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	border: none;
+	font-family: inherit;
+    background: var(--surface);
+    border: 1px solid currentColor;
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 0.4rem .8rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        color: var(--accent-hover);
+    }
+
+    &:is(:focus, :focus-visible) {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        color: var(--text-muted);
+        opacity: 0.6;
+        cursor: default;
+    }
+
+    &.muted {
+        color: var(--text);
+    }
+}
+header {
+	--divider-margin: 2rem;
+
+	h1 {
+		font-size: 1.5rem;
+		font-weight: 600;
+
+		a {
+			color: var(--accent);
+			text-decoration: none;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+
+    h2 {
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin-block-start: 1rem;
+    }
+}
+
+/* --- Layout helpers --- */
+.row {
+    display: flex;
+    flex-direction: row;
+	flex-wrap: wrap;
+    gap: var(--row-gap, 0.75rem);
+    align-items: var(--row-align, center);
+    justify-content: var(--row-justify, flex-start);
+
+    &.with-separators {
+        --row-gap: 0;
+        > *:not(:last-child) {
+            border-right: 1px solid var(--text-muted);
+            padding-inline-end: 1rem;
+            margin-inline-end: 1rem;
+        }
+    }
+}
+.stacked {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stacked-gap, 0.5rem);
+    align-items: var(--stacked-align, stretch);
+    justify-content: var(--stacked-justify, start);
+}
+.with-divider {
+    border-bottom: 1px solid var(--border);
+    padding-block-end: var(--divider-padding, 1rem);
+    margin-block-end: var(--divider-margin, 1rem);
+}
+
+/* --- Typography --- */
+code {
+    background: var(--bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--text);
+}
+a {
+	color: var(--accent);
+	text-decoration: none;
+
+	&:hover {
+		color: var(--accent-hover);
+		text-decoration: underline;
+	}
+}
+.card-title + time,
+p:is(.muted) {
+    font-size: 0.85rem;
+}
+.success {
+    color: var(--green);
+}
+.error {
+    color: var(--red);
+}
+.muted {
+    color: var(--text-muted);
+}
+:is(.content, .comment) {
+    color: var(--text);
+    font-size: 0.88rem;
+}
+
+/* --- Containers --- */
+.card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	overflow: hidden;
+    padding: 1rem;
+}
+.card-actions {
+    --row-align: center;
+    --row-justify: space-between;
+}
+.card-title {
+	--row-justify: space-between;
+	--row-align: flex-start;
+
+    h3:has(a) {
+        font-weight: 600;
+        font-size: 1.05rem;
+        flex: 1;
+
+        .identifier {
+            color: var(--text-muted);
+            font-weight: 400;
+            /* a little extra space between the issue number and the title */
+            margin-inline-end: 0.25rem;
+        }
+    }
+}
+.card-body {
+	h4 {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-bottom: 0.5rem;
+	}
+}
+.comment {
+    &.with-divider:last-of-type {
+        border-bottom: none;
+    }
+    .author {
+        font-weight: 600;
+    }
+    time {
+        font-size: 0.75rem;
+    }
+}
+.empty {
+	text-align: center;
+	padding: 4rem 2rem;
+}
+
+/* note: difference between a static and a dynamic badge is the tag (span vs button) */
+.badge {
+    background-color: var(--badge-background, var(--badge-accent, var(--accent)));
+	color: var(--badge-color, contrast-color(var(--badge-background)));
+    font-size: 0.8rem;
+    font-family: inherit;
+    padding: 0.4rem .8rem;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &.outline {
+        background-color: var(--badge-background, var(--overlay));
+        color: var(--badge-color, var(--badge-accent, var(--accent)));
+    }
+}
+/* inactive badges are styled differently to indicate they are not clickable */
+span.badge {
+	font-size: 0.7rem;
+	padding: 0.1rem 0.45rem;
+	border-radius: 12px;
+	font-weight: 400;
+    opacity: 0.8;
+}
+/* reports on the status of the action (success or error) */
+.badge + .status {
+	display: block;
+	margin-block-start: 0.4rem;
+	font-size: 0.78rem;
+	color: var(--text-muted);
+}

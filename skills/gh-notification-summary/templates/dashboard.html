@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Notifications</title>
+<style>{{ styles | safe }}</style>
+</head>
+<body>
+<header class="stacked with-divider">
+    <h1>
+      <a href="https://github.com/notifications">GitHub notifications</a>
+    </h1>
+    <div class="row with-separators">
+        <p class="muted" id="notification-count" data-total="{{ cards.length }}">
+          <span class="show-count">{{ cards.length }}</span>
+          <span class="descriptor"> unread</span> notification<span class="plural"{% if cards.length > 1 %} hidden{% endif %}>s</span>
+          <span class="out-of"> (of <span class="show-count">{{ cards.length }}</span> total)</span>
+        </p>
+        <p class="muted">Generated {{ now | date }}</p>
+    </div>
+    <div class="stacked" id="available-filters">
+      <h2>Available filters</h2>
+      <p class="muted">Click on a filter to apply it. Click on the filter again to remove it.</p>
+      <div class="row filter-badges">
+          {% for repository in repositories %}
+          <button type="button" class="badge outline" style="--badge-accent:{{ repository | randomColor('dark') }};" data-action="filter" data-filter="repository" data-repository="{{ repository }}" title="Show only notifications from this repository">{{ repository }}</button>
+          {% endfor %}
+          {% for reason in reasons %}
+          <button type="button" class="badge" style="--badge-accent:{{ reason | randomColor }};" data-action="filter" data-filter="reason" data-reason="{{ reason }}" title="Show only notifications with this reason">{{ reason | printify }}</button>
+          {% endfor %}
+          <button type="button" data-action="clear" data-filter="repository" hidden>Show all repositories</button>
+          <button type="button" data-action="clear" data-filter="reason" hidden>Show all reasons</button>
+      </div>
+    </div>
+</header>
+
+<main id="cards" class="stacked">
+  {% for card in cards %}
+    {% set repository = card.repo.owner + "/" + card.repo.name %}
+    <div class="card stacked" data-state="{{ card.state }}" data-issue="{{ card.number }}" data-repository="{{ repository }}" data-reason="{{ card.reason }}" data-thread-id="{{ card.thread_id }}">
+        <div class="card-actions row">
+            <button type="button" class="badge outline" style="--badge-accent:{{ repository | randomColor('dark') }};" data-action="filter" data-filter="repository" title="Show only notifications from this repository">
+              {{ repository }}
+            </button>
+            <div class="card-action-item">
+                <button type="button" class="muted" data-action="unsubscribe">Unsubscribe</button>
+                <span class="status" aria-live="polite"></span>
+            </div>
+        </div>
+        <div class="card-header stacked with-divider">
+          {% if card.labels.length > 0 %}
+            <div class="card-labels row">
+                {% for label in card.labels %}
+                  <span class="badge outline" {% if label.color %}style="--badge-accent:#{{ label.color }};"{% endif %}>{{ label.name }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="card-title row">
+                <h3>
+                  {% if card.state !== "open" %}
+                  <span class="badge outline" style="--badge-accent:{{ card.state | randomColor('dark') }};" title="Issue state">{{ card.state | printify }}</span>
+                  {% endif %}
+                  <a href="{{ card.url }}" target="_blank">
+                    {% if card.number %}
+                    <span class="identifier">#{{ card.number }}</span>
+                    {% endif %}
+                    {{ card.title }}
+                  </a>
+                </h3>
+                <button type="button" class="badge" style="--badge-accent:{{ card.reason | randomColor }};" data-action="filter" data-filter="reason" title="Show only notifications for this reason">
+                  {{ card.reason | printify }}
+                </button>
+            </div>
+            {% if card.updated_at | datetime %}<time class="muted" datetime="{{ card.updated_at | datetime }}">{{ card.updated_at | date }}</time>{% endif %}
+        </div>
+        <div class="card-body stacked">
+          {% if card.summary %}
+          <h4>Update summary (AI-generated)</h4>
+          <div class="content">{{ card.summary | markdown | safe }}</div>
+          {% elif card.comments?.length > 0 %}
+          <h4>Latest activity</h4>
+          {% for comment in card.comments %}
+          <div class="comment with-divider stacked">
+            <p class="row">
+              <a class="author" href="{{ comment.author_url }}">@{{ comment.author }}</a>
+              <span class="muted"> · </span>
+              {% if comment.updated_at | datetime %}<time class="muted" datetime="{{ comment.updated_at | datetime }}">{{ comment.updated_at | date }}</time>{% endif %}
+            </p>
+            {# allow markdown in the comment body #}
+            <div class="content">{{ comment.body | markdown | safe }}</div>
+            <p><a href="{{ comment.url }}" target="_blank">View comment on GitHub</a></p>
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+    </div>
+  {% endfor %}
+
+  <section class="empty stacked" id="empty-state" hidden>
+      <h2 class="success">All clear!</h2>
+      <div class="content">
+        <p class="muted">No unread notifications in your inbox.</p>
+      </div>
+  </section>
+</main>
+
+<script type="module">{{ script | safe }}</script>

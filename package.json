@@ -13,41 +13,47 @@
     "url": "https://github.com/castastrophe/agent-skills/issues"
   },
   "type": "module",
-  "workspaces": [
-    "skills/*"
-  ],
   "main": "index.js",
   "bin": "bin/install.js",
   "files": [
     ".claude-plugin/",
-    "CHANGELOG.md",
-    "LICENSE",
-    "README.md",
-    "agent.yaml",
-    "marketplace.json",
     "bin/",
-    "index.js",
     "skills/",
-    "AGENTS.md"
+    "AGENTS.md",
+    "agent.yaml",
+    "marketplace.json"
   ],
   "scripts": {
+    "bundle": "node scripts/bundle-skills.js",
+    "check": "yarn workspaces foreach -A run check",
+    "check:all": "yarn workspaces foreach -A run check",
+    "ci:test": "yarn workspaces foreach -A run ci:test",
     "coverage": "node scripts/run-tests.js --coverage-only",
+    "evals": "node scripts/run-evals.js",
+    "format": "yarn node:format",
+    "format:all": "yarn workspaces foreach -A run format",
+    "generate:agent-yaml": "node scripts/generate-agent-yaml.js",
+    "generate:marketplace": "node scripts/generate-plugin-manifest.js",
     "postinstall": "husky && envoy || true",
+    "lint": "yarn node:lint",
+    "lint:all": "yarn workspaces foreach -A run lint",
+    "node:format": "prettier --cache --write package.json */*.js *.{js,json,yml,md} && eslint --no-error-on-unmatched-pattern --no-warn-ignored --cache --fix *.{js,json,yml,md} */*.{js,json,yml,md}",
+    "node:lint": "prettier --cache --check package.json */*.js *.{js,json,yml,md} && eslint --no-error-on-unmatched-pattern --no-warn-ignored --cache *.{js,json,yml,md} */*.{js,json,yml,md}",
     "prepack": "pinst --disable",
     "postpack": "pinst --enable",
-    "generate-agent-yaml": "node scripts/generate-agent-yaml.js",
-    "generate-plugin-manifest": "node scripts/generate-plugin-manifest.js",
-    "prepublishOnly": "yarn bundle && yarn generate-agent-yaml && yarn generate-plugin-manifest",
+    "prepublishOnly": "run-p --print-label bundle \"generate:*\"",
+    "py:check": "mypy --config-file pyproject.toml skills/*",
+    "py:format": "prettier --write --plugin prettier-plugin-packagejson skills/*/pyproject.toml skills/*/requirements.txt",
+    "py:lint": "ruff check skills/*",
+    "py:security": "bandit -r skills/*",
     "release": "semantic-release",
-    "evals": "node scripts/run-evals.js",
+    "security:all": "yarn workspaces foreach -A run security",
     "test": "node scripts/run-tests.js",
-    "ci:test": "yarn workspaces foreach -A run ci:test",
-    "lint": "yarn workspaces foreach -A run lint",
-    "format": "yarn workspaces foreach -A run format",
-    "check": "yarn workspaces foreach -A run check",
-    "security": "yarn workspaces foreach -A run security",
-    "bundle": "node scripts/bundle-skills.js"
+    "ts:check": "tsc --noEmit"
   },
+  "workspaces": [
+    "skills/*"
+  ],
   "dependencies": {
     "adm-zip": "^0.5.17"
   },
@@ -56,6 +62,10 @@
     "@anthropic-ai/sdk": "^0.86.1",
     "@commitlint/cli": "^20.0.0",
     "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/css": "^1.1.0",
+    "@eslint/js": "^10.0.1",
+    "@eslint/json": "^1.2.0",
+    "@eslint/markdown": "^8.0.1",
     "@semantic-release/changelog": "^6.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.0",
@@ -63,11 +73,14 @@
     "@semantic-release/npm": "^13.0.0",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "colors": "^1.4.0",
-    "eslint": "^10.1.0",
+    "eslint": "^10.2.0",
+    "eslint-config-prettier": "^10.1.8",
     "execa": "^9.6.1",
+    "globals": "^17.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.3",
     "listr2": "^10.2.1",
+    "npm-run-all": "^4.1.5",
     "pinst": "^3.0.0",
     "prettier": "^3.8.1",
     "prettier-package-json": "^2.8.0",
@@ -78,12 +91,12 @@
   },
   "keywords": [
     "agent-skills",
-    "claude-code",
-    "claude",
-    "anthropic",
-    "ai",
     "agents",
-    "automation"
+    "ai",
+    "anthropic",
+    "automation",
+    "claude",
+    "claude-code"
   ],
   "engines": {
     "node": ">=24.0.0"

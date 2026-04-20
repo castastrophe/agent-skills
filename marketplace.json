@@ -8,17 +8,17 @@
       "description": "All 1 available agent skills from @allons-y/agent-skills",
       "components": {
         "skills": [
-          "skills/gh-notification-summary"
+          "gh-notification-summary"
         ]
       }
     },
     {
       "id": "gh-notification-summary",
       "name": "gh-notification-summary",
-      "description": "Review, summarize, and manage GitHub notifications. Use this skill whenever the user mentions GitHub notifications, or wants to catch up on GitHub project discussions. Also trigger when the user says /unsub followed by an issue number, or asks to mark GitHub notifications as done.",
+      "description": "Review, summarize, and manage GitHub notifications. Use this skill whenever the user mentions GitHub notifications, unread GitHub activity, open issues on their repos, or wants to catch up on project discussions — even if they don't use the word 'notifications'. Also trigger for /unsub <number>, 'mark all done', 'clear my GitHub inbox', or any request to triage, dismiss, or act on GitHub notifications.",
       "components": {
         "skills": [
-          "skills/gh-notification-summary"
+          "gh-notification-summary"
         ]
       }
     }

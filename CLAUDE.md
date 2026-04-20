@@ -1,6 +1,6 @@
 # @allons-y/agent-skills
 
-A Yarn workspaces monorepo of Claude agent skills. Each skill under `skills/` is a workspace member with its own `package.json` (`private: true`), `SKILL.md`, Python implementation scripts, `requirements.txt`, `pyproject.toml`, and `pytest` test suite. Only the root package publishes to npm — skills are bundled as `.zip` files during publish for drop-in installation.
+A Yarn workspaces monorepo of Claude agent skills. Each skill under `skills/` is a workspace member with its own `package.json` (`private: true`), `SKILL.md`, implementation scripts, and test suite. Most skills use Python (`requirements.txt`, `pyproject.toml`, `pytest`); some (for example `gh-notification-summary`) are **Node.js-only** (`node --test`, ESLint/Prettier). Only the root package publishes to npm — skills are bundled as `.zip` files during publish for drop-in installation.
 
 ## Repository layout
 
@@ -9,7 +9,7 @@ package.json                    # Root workspace — workspaces: ["skills/*"]
 index.js                        # Node.js entry point — exports getSkills()
 bin/install.js                  # npx installer CLI
 scripts/
-  run-tests.js                  # Discovers and runs pytest across all skills
+  run-tests.js                  # Runs each skill's `yarn workspace … test` (pytest or Node + c8)
   run-evals.js                  # LLM eval runner (Anthropic API)
   bundle-skills.js              # Bundles each skill into a .zip for distribution
   generate-agent-yaml.js        # Regenerates agent.yaml from the skills directory
@@ -18,10 +18,10 @@ skills/                         # Yarn workspace members
   <skill-name>/
     package.json                # private: true — skill-level scripts (test, lint, etc.)
     SKILL.md                    # YAML frontmatter (name, description) + usage docs
-    pyproject.toml              # mypy configuration
-    requirements.txt            # Python dependencies for this skill
-    scripts/                    # Python implementation scripts
-    tests/                      # pytest suite
+    pyproject.toml              # (Python skills) mypy configuration
+    requirements.txt            # (Python skills) dependencies — if absent, `run-tests.js` treats the skill as Node-tested
+    scripts/                    # Implementation (Python or Node)
+    tests/                      # pytest or `node --test` (`.js`) suite
     evals/                      # Eval prompts (evals.json)
 agent.yaml                      # Auto-generated skill manifest (do not edit by hand)
 ```
@@ -33,8 +33,8 @@ yarn test                       # Run all skill test suites (parallel)
 yarn test <skill-name>          # Run tests for a single skill
 yarn evals                      # Run LLM evals for all skills
 yarn bundle                     # Bundle skills into .zip assets (runs automatically on publish)
-yarn generate-agent-yaml        # Regenerate agent.yaml
-yarn generate-plugin-manifest   # Regenerate .claude-plugin/plugin.json and marketplace.json
+yarn generate:agent-yaml        # Regenerate agent.yaml
+yarn generate:plugin-manifest   # Regenerate .claude-plugin/plugin.json and marketplace.json
 yarn release                    # Cut a release via semantic-release
 ```
 
@@ -45,7 +45,6 @@ Target a single skill without `cd`-ing into it:
 ```bash
 yarn workspace @allons-y/skill-gh-notification-summary test
 yarn workspace @allons-y/skill-gh-notification-summary lint
-yarn workspace @allons-y/skill-gh-notification-summary typecheck
 ```
 
 Run across all workspaces:
@@ -59,32 +58,32 @@ yarn workspaces foreach -A run lint
 
 1. Create a directory under `skills/<skill-name>/`.
 2. Add a `package.json` with `"private": true`. All Python commands use `uv run`:
-   ```json
-   {
-     "name": "@allons-y/skill-<skill-name>",
-     "version": "0.0.0",
-     "private": true,
-     "description": "One-sentence description",
-     "scripts": {
-       "test": "uv run pytest tests/ --tb=short",
-       "lint": "uv run ruff check .",
-       "format": "uv run ruff format --check .",
-       "typecheck": "uv run mypy --config-file pyproject.toml .",
-       "security": "uv run bandit -r scripts/"
-     }
-   }
-   ```
+    ```json
+    {
+    	"name": "@allons-y/skill-<skill-name>",
+    	"version": "0.0.0",
+    	"private": true,
+    	"description": "One-sentence description",
+    	"scripts": {
+    		"test": "uv run pytest tests/ --tb=short",
+    		"lint": "uv run ruff check .",
+    		"format": "uv run ruff format --check .",
+    		"typecheck": "uv run mypy --config-file pyproject.toml .",
+    		"security": "uv run bandit -r scripts/"
+    	}
+    }
+    ```
 3. Add a `SKILL.md` with YAML frontmatter:
-   ```yaml
-   ---
-   name: skill-name
-   description: "One-sentence description. Include trigger phrases here."
-   ---
-   ```
+    ```yaml
+    ---
+    name: skill-name
+    description: "One-sentence description. Include trigger phrases here."
+    ---
+    ```
 4. Add implementation scripts under `scripts/`.
-   - If leveraging python, list dependencies in `requirements.txt` and add a `pyproject.toml` for mypy config.
+    - If leveraging python, list dependencies in `requirements.txt` and add a `pyproject.toml` for mypy config.
 5. Write a full test suite under `tests/` — tests must not require live credentials.
-   - If leveraging python, use `pytest`.
+    - If leveraging python, use `pytest`.
 6. Run `yarn install` to register the new workspace, then `yarn test` to verify.
 
 ## Skill naming

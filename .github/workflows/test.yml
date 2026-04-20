@@ -98,13 +98,13 @@ jobs:
         run: yarn install --immutable
 
       - name: Lint
-        run: yarn lint
+        run: yarn lint:all
 
       - name: Format check
-        run: yarn format --check
+        run: yarn format:all -- --check
 
       - name: Type check
-        run: yarn check
+        run: yarn check:all
 
       - name: Security scan
-        run: yarn security
+        run: yarn security:all

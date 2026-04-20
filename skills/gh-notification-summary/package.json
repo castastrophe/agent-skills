@@ -1,16 +1,36 @@
 {
+  "private": true,
   "name": "@allons-y/skill-gh-notification-summary",
   "version": "0.0.0",
-  "private": true,
   "description": "Review, summarize, and manage GitHub notifications",
+  "type": "module",
+  "bin": {
+    "gh-notifications": "bin/cli.js"
+  },
   "scripts": {
-    "test": "uv run pytest tests",
-    "ci:test": "yarn test --cov-report=xml:../../coverage/coverage-gh-notification-summary.xml",
-    "lint": "uv run ruff check .",
-    "format": "uv run ruff format .",
-    "check": "uv run mypy --config-file pyproject.toml .",
-    "coverage": "yarn test --cov-report=html",
-    "postinstall": "uv sync --frozen && uv pip install -r requirements.txt",
-    "security": "uv run bandit -r scripts/"
+    "ci:test": "yarn coverage",
+    "coverage": "c8 yarn test",
+    "format": "yarn node:format",
+    "lint": "yarn node:lint",
+    "preview": "gh-notifications fetch",
+    "test": "node --test tests"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
+    "@octokit/auth-oauth-device": "^8.0.3",
+    "@octokit/rest": "^21.1.1",
+    "@prettier/sync": "^0.6.1",
+    "colors": "^1.4.0",
+    "dotenv": "^16.6.1",
+    "inquirer": "^13.4.1",
+    "markdown-it": "^14.1.1",
+    "nunjucks": "^3.2.4",
+    "randomcolor": "^0.6.2",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "c8": "^10.1.3",
+    "eslint": "^10.1.0",
+    "prettier": "^3.8.1"
   }
 }

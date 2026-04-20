@@ -3,28 +3,41 @@ import path from "path";
 import { execa } from "execa";
 import { Listr } from "listr2";
 import table from "text-table";
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import "colors";
 
+/* eslint-disable no-control-regex */
+/* prettier-ignore no-control-regex */
+
 const root = process.cwd();
-const skills = fs.existsSync(path.join(root, 'skills')) ? fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name) ?? [] : [];
-const argv = yargs().usage('$0 [skills...]', 'run test suite for the given skills', (yargs) => {
-	return yargs.positional('skills', {
-		type: 'array',
-		of: 'string',
-		optional: true,
-		choices: skills,
-		default: skills,
-		description: 'the names of the skills to run the tests for',
-	}).options({
-		coverageOnly: {
-			type: 'boolean',
-			description: 'only run coverage reports',
-			default: false,
-		},
-	});
-}).help().parseSync(hideBin(process.argv));
+const skills = fs.existsSync(path.join(root, "skills"))
+	? (fs
+			.readdirSync(path.join(root, "skills"), { withFileTypes: true })
+			.filter((e) => e.isDirectory())
+			.map((e) => e.name) ?? [])
+	: [];
+const argv = yargs()
+	.usage("$0 [skills...]", "run test suite for the given skills", (yargs) => {
+		return yargs
+			.positional("skills", {
+				type: "array",
+				of: "string",
+				optional: true,
+				choices: skills,
+				default: skills,
+				description: "the names of the skills to run the tests for",
+			})
+			.options({
+				coverageOnly: {
+					type: "boolean",
+					description: "only run coverage reports",
+					default: false,
+				},
+			});
+	})
+	.help()
+	.parseSync(hideBin(process.argv));
 
 /**
  * Resolve the Python executable to use. Prefers a repo-root `.venv` if one
@@ -112,7 +125,7 @@ function parseReportLog(reportLogPath) {
 
 	// Filter the events to only include the call results.
 	const callResults = events.filter(
-		(e) => e.$report_type === "TestReport" && e.when === "call",
+		(e) => e.$report_type === "TestReport" && e.when === "call"
 	);
 
 	// Separate the passed and failed tests.
@@ -135,7 +148,67 @@ function parseReportLog(reportLogPath) {
 	});
 
 	// Return the report log.
-	return { total: callResults.length, passed: passed.length, failed: failed.length, time, failures };
+	return {
+		total: callResults.length,
+		passed: passed.length,
+		failed: failed.length,
+		time,
+		failures,
+	};
+}
+
+/**
+ * Parse `node --test` spec reporter summary lines from combined stdout/stderr.
+ *
+ * @param {string} text
+ * @returns {ReportLog}
+ */
+function parseNodeTestOutput(text) {
+	const s = stripAnsi(text || "");
+	const testsM = s.match(/ℹ tests (\d+)/);
+	const passM = s.match(/ℹ pass (\d+)/);
+	const failM = s.match(/ℹ fail (\d+)/);
+	const durM = s.match(/ℹ duration_ms ([\d.]+)/);
+	const total = testsM ? parseInt(testsM[1], 10) : 0;
+	const passed = passM ? parseInt(passM[1], 10) : 0;
+	const failed = failM ? parseInt(failM[1], 10) : 0;
+	const time = durM ? parseFloat(durM[1]) / 1000 : 0;
+	const failures = [];
+	if (failed > 0) {
+		const failBlock = s.split(/failing tests?:/i)[1];
+		if (failBlock) {
+			const chunks = failBlock.split(/\n(?=test at |\n✖)/);
+			for (const chunk of chunks) {
+				const nameM = chunk.match(/✖\s+([^\n]+)/);
+				const msgM = chunk.match(
+					/AssertionError[^\n]*\n\s*([\s\S]*?)(?=\n\s*at |\n\n|$)/
+				);
+				if (nameM) {
+					failures.push({
+						nodeid: nameM[1].trim(),
+						message:
+							(msgM && msgM[1] ? msgM[1] : chunk)
+								.split("\n")
+								.map((l) => l.trim())
+								.filter(Boolean)[0] || "failed",
+					});
+				}
+			}
+		}
+	}
+	return { total, passed, failed, time, failures };
+}
+
+/**
+ * Skills without requirements.txt use the workspace `test` script as-is (e.g. Node + c8).
+ *
+ * @param {string} skillName
+ * @returns {boolean}
+ */
+function isPytestSkill(skillName) {
+	return fs.existsSync(
+		path.join(root, "skills", skillName, "requirements.txt")
+	);
 }
 
 /**
@@ -152,27 +225,35 @@ function parseCoverage(reportPath) {
 	const reportContent = fs.readFileSync(reportPath, "utf8");
 	const report = reportContent ? JSON.parse(reportContent) : null;
 	const coverage = { totals: report?.totals };
-	coverage.files = Object.entries(report?.files ?? {}).reduce((acc, [testFile, results]) => {
-		const groupedLines = [];
-		let idx = 0;
-		while (idx < results?.missing_lines?.length) {
-			const start = results.missing_lines[idx];
-			let end = start;
-			while (results?.missing_lines?.[idx + 1] && results?.missing_lines?.[idx + 1] === end + 1) {
-				end++;
+	coverage.files = Object.entries(report?.files ?? {}).reduce(
+		(acc, [testFile, results]) => {
+			const groupedLines = [];
+			let idx = 0;
+			while (idx < results?.missing_lines?.length) {
+				const start = results.missing_lines[idx];
+				let end = start;
+				while (
+					results?.missing_lines?.[idx + 1] &&
+					results?.missing_lines?.[idx + 1] === end + 1
+				) {
+					end++;
+					idx++;
+				}
+
+				groupedLines.push(
+					start !== end ? `${start}-${end}` : String(start)
+				);
 				idx++;
 			}
-
-			groupedLines.push(start !== end ? `${start}-${end}` : String(start));
-			idx++;
-		}
-		acc.push({
-			name: path.basename(testFile),
-			rate: results.summary.percent_covered,
-			uncoveredLines: groupedLines,
-		});
-		return acc;
-	}, []);
+			acc.push({
+				name: path.basename(testFile),
+				rate: results.summary.percent_covered,
+				uncoveredLines: groupedLines,
+			});
+			return acc;
+		},
+		[]
+	);
 	return coverage;
 }
 
@@ -182,7 +263,10 @@ function parseCoverage(reportPath) {
  * @param {number|void} c - The coverage percentage.
  * @returns {string} The coverage percentage in a human-readable format.
  */
-const printCoverage = (c) => typeof c === "number" ? `${c > 80 ? String(Math.round(c)).green : String(Math.round(c)).yellow}%` : `—`.dim;
+const printCoverage = (c) =>
+	typeof c === "number"
+		? `${c > 80 ? String(Math.round(c)).green : String(Math.round(c)).yellow}%`
+		: `—`.dim;
 
 /**
  * Print the number of failed tests in a human-readable format.
@@ -190,7 +274,7 @@ const printCoverage = (c) => typeof c === "number" ? `${c > 80 ? String(Math.rou
  * @param {number} f - The number of failed tests.
  * @returns {string} The number of failed tests in a human-readable format.
  */
-const printFailCount = (f, t) => f > 0 && t > 0 ? String(f).red : String(f);
+const printFailCount = (f, t) => (f > 0 && t > 0 ? String(f).red : String(f));
 
 /**
  * Print the number of passed tests in a human-readable format.
@@ -199,7 +283,7 @@ const printFailCount = (f, t) => f > 0 && t > 0 ? String(f).red : String(f);
  * @param {number} t - The total number of tests.
  * @returns {string} The number of passed tests in a human-readable format.
  */
-const printPassed = (p, t) => p > 0 && t > 0 ? String(p).green : String(p);
+const printPassed = (p, t) => (p > 0 && t > 0 ? String(p).green : String(p));
 
 /**
  * Print the time taken to run the tests in a human-readable format.
@@ -207,7 +291,12 @@ const printPassed = (p, t) => p > 0 && t > 0 ? String(p).green : String(p);
  * @param {number} t - The time taken to run the tests.
  * @returns {string} The time taken to run the tests in a human-readable format.
  */
-const printTime = (t) => typeof t === "number" ? t > 0 && t.toFixed(2) === "0.00" ? `>0.01s` : `${t.toFixed(2)}s` : "";
+const printTime = (t) =>
+	typeof t === "number"
+		? t > 0 && t.toFixed(2) === "0.00"
+			? `>0.01s`
+			: `${t.toFixed(2)}s`
+		: "";
 
 /**
  * Strip ANSI escape codes from a string.
@@ -215,7 +304,9 @@ const printTime = (t) => typeof t === "number" ? t > 0 && t.toFixed(2) === "0.00
  * @param {string} s - The string to strip ANSI escape codes from.
  * @returns {string} The string with ANSI escape codes removed.
  */
-const stripAnsi = (s) => typeof s === "string" ? s.replace(/\x1B\[\d+m/g, "") : s;
+
+const stripAnsi = (s) =>
+	typeof s === "string" ? s.replace(/\x1B\[\d+m/g, "") : s;
 
 /**
  * Add borders to a table.
@@ -224,8 +315,13 @@ const stripAnsi = (s) => typeof s === "string" ? s.replace(/\x1B\[\d+m/g, "") : 
  * @returns {string[]} The table with borders.
  */
 const addTableBorders = (table) => {
-	const lines = table.split("\n").map((l) => l.trim()).filter(Boolean);
-	const lineWidth = lines.map((l) => stripAnsi(l).length).reduce((a, b) => Math.max(a, b), 0);
+	const lines = table
+		.split("\n")
+		.map((l) => l.trim())
+		.filter(Boolean);
+	const lineWidth = lines
+		.map((l) => stripAnsi(l).length)
+		.reduce((a, b) => Math.max(a, b), 0);
 	const rule = "─".dim.repeat(lineWidth);
 	return [rule + "\n", ...lines.map((l) => l + "\n" + rule)];
 };
@@ -239,32 +335,39 @@ const addTableBorders = (table) => {
  */
 async function runSkillTests(skillName, ctx) {
 	// Create the reports directory if it doesn't exist.
-	if (!fs.existsSync(path.join(root, 'reports'))) {
-		fs.mkdirSync(path.join(root, 'reports'), { recursive: true });
+	if (!fs.existsSync(path.join(root, "reports"))) {
+		fs.mkdirSync(path.join(root, "reports"), { recursive: true });
 	}
 
 	// Clear the report log file if it exists.
-	if (fs.existsSync(ctx.resultLog(skillName))) fs.unlinkSync(ctx.resultLog(skillName));
+	if (fs.existsSync(ctx.resultLog(skillName)))
+		fs.unlinkSync(ctx.resultLog(skillName));
 
 	let output = "\n\n";
-	// Run the tests using yarn workspace.
+
+	const pytestArgs = [
+		"workspace",
+		`@allons-y/skill-${skillName}`,
+		"test",
+		`--report-log=${ctx.resultLog(skillName)}`,
+		`--cov=${ctx.scriptsDirectory(skillName)}`,
+		`--cov-report=json:${ctx.coverageReport(skillName)}`,
+	];
+
+	const nodeArgs = ["workspace", `@allons-y/skill-${skillName}`, "test"];
+
 	const result = await execa(
 		"yarn",
-		[
-			"workspace",
-			`@allons-y/skill-${skillName}`,
-			"test",
-			`--report-log=${ctx.resultLog(skillName)}`,
-			`--cov=${ctx.scriptsDirectory(skillName)}`,
-			`--cov-report=json:${ctx.coverageReport(skillName)}`,
-		],
+		isPytestSkill(skillName) ? pytestArgs : nodeArgs,
 		{
 			reject: false,
 			all: true,
-			env: { ...process.env, PYTHONPATH: ctx.skillDirectory(skillName) },
-		},
+			cwd: root,
+			env: isPytestSkill(skillName)
+				? { ...process.env, PYTHONPATH: ctx.skillDirectory(skillName) }
+				: process.env,
+		}
 	).catch((err) => {
-		// If the tests failed, add the error message to the context object.
 		if (err?.message) {
 			output += `${err?.message ?? err}\n\n`;
 		}
@@ -274,9 +377,12 @@ async function runSkillTests(skillName, ctx) {
 		output += `${result.all || result.stdout}\n\n`;
 	}
 
-	// Parse the report log and coverage XML file.
-	const report = parseReportLog(ctx.resultLog(skillName));
-	const coverage = parseCoverage(ctx.coverageReport(skillName));
+	const report = isPytestSkill(skillName)
+		? parseReportLog(ctx.resultLog(skillName))
+		: parseNodeTestOutput(result?.all || result?.stdout || "");
+	const coverage = isPytestSkill(skillName)
+		? parseCoverage(ctx.coverageReport(skillName))
+		: undefined;
 
 	// Return the context object for the skill.
 	return {
@@ -304,12 +410,17 @@ function printSummaryTable(results) {
 	let totalCoverage = 0;
 	let totalTime = 0;
 
+	let coverageSkillCount = 0;
 	const dataRows = rows.map(([skillName, data]) => {
 		const { total, passed, failed, time } = data.report || {};
 		totalTests += total;
 		totalPassed += passed;
 		totalFailed += failed;
-		totalCoverage += data.coverage?.totals?.percent_covered ?? 0;
+		const pct = data.coverage?.totals?.percent_covered;
+		if (typeof pct === "number") {
+			totalCoverage += pct;
+			coverageSkillCount += 1;
+		}
 		totalTime += time;
 		return [
 			skillName.magenta,
@@ -317,7 +428,7 @@ function printSummaryTable(results) {
 			printPassed(passed, total),
 			printFailCount(failed, total),
 			printTime(time),
-			printCoverage(data.coverage?.totals?.percent_covered ?? 0),
+			printCoverage(typeof pct === "number" ? pct : undefined),
 		];
 	});
 
@@ -327,22 +438,23 @@ function printSummaryTable(results) {
 		printPassed(totalPassed, totalTests),
 		printFailCount(totalFailed, totalTests),
 		printTime(totalTime),
-		printCoverage(totalCoverage / (rows.length ?? 1)),
+		printCoverage(
+			coverageSkillCount > 0
+				? totalCoverage / coverageSkillCount
+				: undefined
+		),
 	];
 
-	const output = table(
-		[headers.map((h) => h.bold), ...dataRows, footerRow],
-		{
-			align: ["l", "c", "c", "c", "r", "r"],
-			stringLength: (s) => stripAnsi(s).length,
-		},
-	);
+	const output = table([headers.map((h) => h.bold), ...dataRows, footerRow], {
+		align: ["l", "c", "c", "c", "r", "r"],
+		stringLength: (s) => stripAnsi(s).length,
+	});
 
 	const resultLines = [];
 	resultLines.push(...addTableBorders(output));
 
 	const allFailures = rows.flatMap(([, data]) =>
-		(data.report?.failures || []).map((f) => ({ ...f })),
+		(data.report?.failures || []).map((f) => ({ ...f }))
 	);
 	if (allFailures.length > 0) {
 		resultLines.push("\n\nFailed tests:");
@@ -363,97 +475,134 @@ function printSummaryTable(results) {
  * @throws {Error} If the tests fail.
  */
 async function main() {
-	const tasks = new Listr([
-		{
-			title: "Run tests",
-			task: async (ctx, task) => {
-				ctx.results = {};
-				return task.newListr(ctx.skills.map((name) => ({
-					title: `${name.magenta}`,
-					task: async (ctx) => {
-						return runSkillTests(name, ctx).then((result) => {
-							ctx.results[name] = result;
-							return result;
-						});
-					},
-				})), { concurrent: true });
-			}
-		},
-		{
-			title: "Print summary table",
-			enabled: (ctx) => !ctx.coverageOnly,
-			task: async (ctx, task) => {
-				if (Object.keys(ctx.results).length === 0) {
-					throw new Error(`No test results collected.\n`);
-				}
-
-				// Show full test output
-				for (const [skillName, data] of Object.entries(ctx.results)) {
-					if (!data.failed) continue;
-					if (data.output && data.output.length > 0) {
-						task.output = `\n\n${data.output}\n\n`;
-					} else {
-						task.output = `\n${'✗'.red}  ${skillName}  —  (no output captured)\n`;
+	const tasks = new Listr(
+		[
+			{
+				title: "Run tests",
+				task: async (ctx, task) => {
+					ctx.results = {};
+					return task.newListr(
+						ctx.skills.map((name) => ({
+							title: `${name.magenta}`,
+							task: async (ctx) => {
+								return runSkillTests(name, ctx).then(
+									(result) => {
+										ctx.results[name] = result;
+										return result;
+									}
+								);
+							},
+						})),
+						{ concurrent: true }
+					);
+				},
+			},
+			{
+				title: "Print summary table",
+				enabled: (ctx) => !ctx.coverageOnly,
+				task: async (ctx, task) => {
+					if (Object.keys(ctx.results).length === 0) {
+						throw new Error(`No test results collected.\n`);
 					}
-				}
 
-				task.output = `${' Test summary '.bold.bgWhite.black}\n\n${printSummaryTable(ctx.results)}\n\n`;
+					// Show full test output
+					for (const [skillName, data] of Object.entries(
+						ctx.results
+					)) {
+						if (!data.failed) continue;
+						if (data.output && data.output.length > 0) {
+							task.output = `\n\n${data.output}\n\n`;
+						} else {
+							task.output = `\n${"✗".red}  ${skillName}  —  (no output captured)\n`;
+						}
+					}
 
-				if (Object.values(ctx.results).some((d) => d.failed)) {
-					throw new Error(`Some tests failed. See output for details.\n`);
-				}
+					task.output = `${" Test summary ".bold.bgWhite.black}\n\n${printSummaryTable(ctx.results)}\n\n`;
+
+					if (Object.values(ctx.results).some((d) => d.failed)) {
+						throw new Error(
+							`Some tests failed. See output for details.\n`
+						);
+					}
+				},
+				rendererOptions: {
+					bottomBar: Infinity,
+					persistentOutput: true,
+				},
 			},
-			rendererOptions: {
-				bottomBar: Infinity,
-				persistentOutput: true
-			}
-		},
-		{
-			title: "Print coverage report",
-			task: async (ctx, task) => {
-				const rows = [];
+			{
+				title: "Print coverage report",
+				task: async (ctx, task) => {
+					const rows = [];
 
-				Object.entries(ctx.results).forEach(([skillName, data]) => {
-					rows.push([skillName.magenta, printCoverage(data.coverage?.totals?.percent_covered ?? 0), '']);
-					data.coverage?.files?.forEach((f) => {
-						rows.push([` - ${f.name.cyan}`, printCoverage(f.rate), f.uncoveredLines.join(', ')]);
+					Object.entries(ctx.results).forEach(([skillName, data]) => {
+						const pct = data.coverage?.totals?.percent_covered;
+						rows.push([
+							skillName.magenta,
+							printCoverage(
+								typeof pct === "number" ? pct : undefined
+							),
+							"",
+						]);
+						data.coverage?.files?.forEach((f) => {
+							rows.push([
+								` - ${f.name.cyan}`,
+								printCoverage(f.rate),
+								f.uncoveredLines.join(", "),
+							]);
+						});
 					});
-				});
 
-				const coverageTable = table(
-					[
-						["Test".bold, "Line rate".bold, "Uncovered Lines".bold],
-						...rows,
-					],
-					{
-						stringLength: (s) => stripAnsi(s).length,
-						align: ["l", "c", "l"],
-					},
-				);
-				task.output = `\n\n${' Coverage report '.bold.bgWhite.black}\n${addTableBorders(coverageTable).join("\n")}\n\n`;
+					const coverageTable = table(
+						[
+							[
+								"Test".bold,
+								"Line rate".bold,
+								"Uncovered Lines".bold,
+							],
+							...rows,
+						],
+						{
+							stringLength: (s) => stripAnsi(s).length,
+							align: ["l", "c", "l"],
+						}
+					);
+					task.output = `\n\n${" Coverage report ".bold.bgWhite.black}\n${addTableBorders(coverageTable).join("\n")}\n\n`;
+				},
+				rendererOptions: {
+					bottomBar: Infinity,
+					persistentOutput: true,
+				},
 			},
-			rendererOptions: {
-				bottomBar: Infinity,
-				persistentOutput: true
-			}
+		],
+		{
+			concurrent: false,
+			ctx: {
+				pythonPath: resolvePython(), // the path to the Python executable
+				skillDirectory: (skillName) =>
+					path.join(root, "skills", skillName), // the directory containing the skill's code
+				testDirectory: (skillName) =>
+					path.join(root, "skills", skillName, "tests"), // the directory containing the skill's tests
+				scriptsDirectory: (skillName) =>
+					path.join(root, "skills", skillName, "scripts"), // the directory containing the skill's scripts
+				resultLog: (skillName) =>
+					path.join(root, "reports", `${skillName}.jsonl`), // the file containing the skill's test results
+				coverageReport: (skillName) =>
+					path.join(root, "coverage", `${skillName}.xml`), // the file containing the skill's coverage report
+				...argv,
+			},
 		}
-	], {
-		concurrent: false,
-		ctx: {
-			pythonPath: resolvePython(), // the path to the Python executable
-			skillDirectory: (skillName) => path.join(root, 'skills', skillName), // the directory containing the skill's code
-			testDirectory: (skillName) => path.join(root, 'skills', skillName, "tests"), // the directory containing the skill's tests
-			scriptsDirectory: (skillName) => path.join(root, 'skills', skillName, "scripts"), // the directory containing the skill's scripts
-			resultLog: (skillName) => path.join(root, 'reports', `${skillName}.jsonl`), // the file containing the skill's test results
-			coverageReport: (skillName) => path.join(root, 'coverage', `${skillName}.xml`), // the file containing the skill's coverage report
-			...argv,
-		}
-	});
+	);
 
-	return await tasks.run().catch((e) => Promise.reject(new Error((e?.message ?? e))));
+	return await tasks
+		.run()
+		.catch((e) => Promise.reject(new Error(e?.message ?? e)));
 }
 
 main().catch((err) => {
 	console.error(err?.message ?? err);
 	process.exit(1);
 });
+
+/* eslint-enable no-control-regex */
+/* prettier-enable no-control-regex */

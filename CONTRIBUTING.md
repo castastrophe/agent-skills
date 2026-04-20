@@ -46,17 +46,17 @@ Each skill needs a `package.json` with `"private": true` to prevent accidental p
 
 ```json
 {
-  "name": "@allons-y/skill-<skill-name>",
-  "version": "0.0.0",
-  "private": true,
-  "description": "One-sentence description",
-  "scripts": {
-    "test": "uv run pytest tests/ --tb=short",
-    "lint": "uv run ruff check .",
-    "format": "uv run ruff format --check .",
-    "typecheck": "uv run mypy --config-file pyproject.toml .",
-    "security": "uv run bandit -r scripts/"
-  }
+	"name": "@allons-y/skill-<skill-name>",
+	"version": "0.0.0",
+	"private": true,
+	"description": "One-sentence description",
+	"scripts": {
+		"test": "uv run pytest tests/ --tb=short",
+		"lint": "uv run ruff check .",
+		"format": "uv run ruff format --check .",
+		"typecheck": "uv run mypy --config-file pyproject.toml .",
+		"security": "uv run bandit -r scripts/"
+	}
 }
 ```
 
@@ -153,22 +153,22 @@ Evals also run on demand in CI via the [Evals workflow](../../actions/workflows/
 
 ```json
 {
-  "skill_name": "<skill-name>",
-  "evals": [
-    {
-      "id": 1,
-      "prompt": "natural-language prompt that should trigger this skill",
-      "expected_output": "description of what the agent should do",
-      "files": []
-    },
-    {
-      "id": 2,
-      "prompt": "prompt that should NOT trigger this skill",
-      "expected_output": "Does NOT trigger this skill. Reason why.",
-      "files": [],
-      "should_trigger": false
-    }
-  ]
+	"skill_name": "<skill-name>",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "natural-language prompt that should trigger this skill",
+			"expected_output": "description of what the agent should do",
+			"files": []
+		},
+		{
+			"id": 2,
+			"prompt": "prompt that should NOT trigger this skill",
+			"expected_output": "Does NOT trigger this skill. Reason why.",
+			"files": [],
+			"should_trigger": false
+		}
+	]
 }
 ```
 
@@ -207,27 +207,27 @@ Common types:
 ## Project structure
 
 ```md
-agent-skills/                         # Root workspace (publishes to npm)
-├── package.json                      # Root — workspaces: ["skills/*"]
-├── index.js                          # Exports getSkills()
-├── bin/install.js                    # npx installer CLI
-├── scripts/                          # Root orchestration scripts
-│   ├── run-tests.js                  # Parallel pytest runner
-│   ├── run-evals.js                  # LLM eval runner
-│   ├── bundle-skills.js              # Zips skills for distribution
-│   ├── generate-agent-yaml.js        # Generates agent.yaml
-│   └── generate-plugin-manifest.js   # Generates marketplace.json
-├── skills/                           # Yarn workspace members
-│   └── <skill-name>/                 # Each skill is a workspace
-│       ├── package.json              # private: true, skill-level scripts
-│       ├── pyproject.toml            # mypy config
-│       ├── requirements.txt          # Python dependencies
-│       ├── SKILL.md                  # Skill documentation and metadata
-│       ├── scripts/                  # Python implementation
-│       ├── tests/                    # pytest suite
-│       └── evals/                    # Eval prompts (evals.json)
+agent-skills/ # Root workspace (publishes to npm)
+├── package.json # Root — workspaces: ["skills/*"]
+├── index.js # Exports getSkills()
+├── bin/install.js # npx installer CLI
+├── scripts/ # Root orchestration scripts
+│ ├── run-tests.js # Parallel pytest runner
+│ ├── run-evals.js # LLM eval runner
+│ ├── bundle-skills.js # Zips skills for distribution
+│ ├── generate-agent-yaml.js # Generates agent.yaml
+│ └── generate-plugin-manifest.js # Generates marketplace.json
+├── skills/ # Yarn workspace members
+│ └── <skill-name>/ # Each skill is a workspace
+│ ├── package.json # private: true, skill-level scripts
+│ ├── pyproject.toml # mypy config
+│ ├── requirements.txt # Python dependencies
+│ ├── SKILL.md # Skill documentation and metadata
+│ ├── scripts/ # Python implementation
+│ ├── tests/ # pytest suite
+│ └── evals/ # Eval prompts (evals.json)
 └── .github/
-    └── workflows/                    # CI automation
+└── workflows/ # CI automation
 ```
 
 ## Release process
